@@ -9,6 +9,8 @@
 namespace Diodac\Restorer;
 
 
+use Diodac\Restorer\Property\Property;
+
 class ObjectSerializator
 {
     private $creator;
@@ -21,9 +23,9 @@ class ObjectSerializator
     public function serialize($object)
     {
         $serialized = [];
-        /** @var SerializeStrategy\Strategy $property */
+        /** @var Property $property */
         foreach($this->creator->getProperties() as $property) {
-            $serialized = $property->giveStorable($object, $serialized);
+            $serialized = $property->serialize($object, $serialized);
         }
         return $serialized;
     }

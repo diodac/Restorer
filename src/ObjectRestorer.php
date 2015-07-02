@@ -54,7 +54,7 @@ class ObjectRestorer
 
     private function restoreProperties($obj, array $data)
     {
-        /** @var Strategy $property */
+        /** @var Property $property */
         foreach($this->properties as $property) {
             $property->restore($obj, $data);
         }

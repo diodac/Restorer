@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
+use Diodac\Restorer\ObjectRestorer;
 use Diodac\Restorer\Property\Object;
 use Diodac\Restorer\Property\ValueObjectCollection;
 use Diodac\Restorer\SerializeStrategy\MultiKey;
@@ -51,6 +52,14 @@ class Entity
     public function addElement(Entity $entity)
     {
         $this->extraElements[] = $entity;
+    }
+
+    /**
+     * @return array
+     */
+    public function getElements()
+    {
+        return $this->extraElements;
     }
 
     /**
@@ -178,32 +187,31 @@ class InCollectionCategorySerializator implements \Diodac\Restorer\Property\Valu
     }
 }
 
-$restorer = new \Diodac\Restorer\ObjectRestorer('Entity', [
-    new SingleKey('id', new Value('id')),
-    new SingleKey('name', new Value('name')),
-    new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'],
-        new ValueObject('cost', new MoneyConstructor(), new MoneySerializator())),
-    new SingleKey('categories', new ValueObjectCollection('categories', [
+$restorer = new ObjectRestorer('Entity', [
+    new Value('id', new SingleKey('id')),
+    new Value('name', new SingleKey('name')),
+    new ValueObject('cost', new MoneyConstructor(), new MoneySerializator(), new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'])),
+    new ValueObjectCollection('categories', [
         'category' => ['Category', new CategoryConstructor(), new InCollectionCategorySerializator()],
-    ])),
-    new SingleKey('second_half', new Object('secondHalf', 'Entity', [
-        new SingleKey('id', new Value('id')),
-        new SingleKey('name', new Value('name')),
-        new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'],
-            new ValueObject('cost', new MoneyConstructor(), new MoneySerializator())),
-        new SingleKey('categories', new ValueObjectCollection('categories', [
-            'category' => ['Category', new CategoryConstructor(), new InCollectionCategorySerializator()],
-        ])),
-        new SingleKey('second_half', new Object('secondHalf', 'Entity', [
-            new SingleKey('id', new Value('id')),
-            new SingleKey('name', new Value('name')),
-            new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'],
-                new ValueObject('cost', new MoneyConstructor(), new MoneySerializator())),
-            new SingleKey('categories', new ValueObjectCollection('categories', [
+    ], new SingleKey('categories')),
+    new Object('secondHalf', 'Entity', [
+            new Value('id', new SingleKey('id')),
+            new Value('name', new SingleKey('name')),
+            new ValueObject('cost', new MoneyConstructor(), new MoneySerializator(), new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'])),
+            new ValueObjectCollection('categories', [
                 'category' => ['Category', new CategoryConstructor(), new InCollectionCategorySerializator()],
-            ])),
-        ])),
-    ])),
+            ], new SingleKey('categories')),
+        ], new SingleKey('second_half')),
+    new \Diodac\Restorer\Property\ObjectCollection('extraElements', [
+        'entity' => new ObjectRestorer('Entity', [
+                new Value('id', new SingleKey('id')),
+                new Value('name', new SingleKey('name')),
+                new ValueObject('cost', new MoneyConstructor(), new MoneySerializator(), new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'])),
+                new ValueObjectCollection('categories', [
+                    'category' => ['Category', new CategoryConstructor(), new InCollectionCategorySerializator()],
+                ], new SingleKey('categories')),
+            ], new SingleKey('second_half')),
+    ], new SingleKey('elements')),
 ]);
 
 $obj1 = new Entity('entity1', new Money(123, new Currency('PLN')));
@@ -223,5 +231,5 @@ $serializer = new \Diodac\Restorer\ObjectSerializator($restorer);
 
 $serialized = $serializer->serialize($obj1);
 
-print_r($serialized);
-//var_dump($restorer->create($serialized));
+//print_r($serialized);
+var_dump($restorer->create($serialized));

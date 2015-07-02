@@ -16,26 +16,36 @@ class Object extends Accessible implements Property
 {
     private $class;
     private $properties;
+    private $strategy;
 
-    function __construct($name, $class, $properties)
+    function __construct($name, $class, $properties, Strategy $strategy)
     {
         $this->class = $class;
         $this->properties = $properties;
+        $this->strategy = $strategy;
 
         parent::__construct($name);
     }
 
-    //FIXME: stare podejście
-    public function serialize($serializedObject)
+    public function serialize($serializedObject, array $serializedData)
     {
         $storing = $this->getValue($serializedObject);
-        return array_reduce($this->properties, function(array $carry, Strategy $property) use ($storing) {
-            return $property->giveStorable($storing, $carry);
+        $result = array_reduce($this->properties, function(array $carry, Property $property) use ($storing) {
+            return $property->serialize($storing, $carry);
         }, []);
+        return $this->strategy->injectResult($result, $serializedData);
     }
 
-    public function restore($restoredObject, $value)
+    public function restore($restoredObject, array $serializedData)
     {
-        $this->setValue($restoredObject, (new ObjectRestorer($this->class, $this->properties))->create($value));
+        $this->setValue($restoredObject, (new ObjectRestorer($this->class, $this->properties))->create($serializedData));
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass()
+    {
+        return $this->class;
     }
 }

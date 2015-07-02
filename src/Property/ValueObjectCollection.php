@@ -10,23 +10,26 @@ namespace Diodac\Restorer\Property;
 
 
 use Diodac\Restorer\InvalidConfigurationException;
+use Diodac\Restorer\SerializeStrategy\Strategy;
 
 class ValueObjectCollection extends Accessible
 {
     private $strategies;
     private $typeKey;
+    private $strategy;
 
-    function __construct($name, array $strategies, $typeKey = '__type')
+    function __construct($name, array $strategies, Strategy $strategy, $typeKey = '__type')
     {
         $this->strategies = $strategies;
         $this->typeKey = $typeKey;
+        $this->strategy = $strategy;
         parent::__construct($name);
     }
 
-    public function restore($restoredObject, $value)
+    public function restore($restoredObject, array $serializedData)
     {
         $restored = [];
-        foreach($value as $k => $v) {
+        foreach($this->strategy->selectRequiredData($serializedData) as $k => $v) {
             if (isset($v[$this->typeKey])) {
                 $restored[$k] = $this->restoreObject($v);
             } else {
@@ -46,7 +49,7 @@ class ValueObjectCollection extends Accessible
         return $this->strategies[$type][1]->construct($data);
     }
 
-    public function serialize($serializedObject)
+    public function serialize($serializedObject, array $serializedData)
     {
         $objects = $this->getValue($serializedObject);
         $classIndex = $this->getStrategyTypesIndexedByClass();
@@ -62,7 +65,7 @@ class ValueObjectCollection extends Accessible
             $serialized[$index] = $this->serializeObject($vo, $serializator);
             $serialized[$index][$this->typeKey] = $classIndex[$objClass];
         }
-        return $serialized;
+        return $this->strategy->injectResult($serialized, $serializedData);
     }
 
     private function getStrategyTypesIndexedByClass()

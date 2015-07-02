@@ -11,6 +11,6 @@ namespace Diodac\Restorer\SerializeStrategy;
 
 interface Strategy
 {
-    public function giveStorable($obj, array $result);
-    public function restore($obj, array $data);
+    public function injectResult($result, array $serializedData);
+    public function selectRequiredData(array $serializedData);
 }

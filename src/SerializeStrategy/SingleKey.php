@@ -9,31 +9,35 @@
 namespace Diodac\Restorer\SerializeStrategy;
 
 
-use Diodac\Restorer\Property\Property;
-
 class SingleKey implements Strategy
 {
     private $key;
-    private $definition;
 
     /**
      * @param string $key
-     * @param Property $definition
      */
-    function __construct($key, Property $definition)
+    function __construct($key)
     {
         $this->key = $key;
-        $this->definition = $definition;
     }
 
-    public function giveStorable($obj, array $result)
+    /**
+     * @param $result
+     * @param array $serializedData
+     * @return mixed
+     */
+    public function injectResult($result, array $serializedData)
     {
-        $result[$this->key] = $this->definition->serialize($obj);
-        return $result;
+        $serializedData[$this->key] = $result;
+        return $serializedData;
     }
 
-    public function restore($obj, array $data)
+    /**
+     * @param array $serializedData
+     * @return mixed
+     */
+    public function selectRequiredData(array $serializedData)
     {
-        $this->definition->restore($obj, $data[$this->key]);
+        return $serializedData[$this->key];
     }
 }

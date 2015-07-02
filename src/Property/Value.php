@@ -9,15 +9,34 @@
 namespace Diodac\Restorer\Property;
 
 
+use Diodac\Restorer\SerializeStrategy\Strategy;
+
 class Value extends Accessible implements Property
 {
-    public function serialize($serializedObject)
+    private $strategy;
+
+    function __construct($name, Strategy $strategy)
     {
-        return $this->getValue($serializedObject);
+        $this->strategy = $strategy;
+        parent::__construct($name);
     }
 
-    public function restore($restoredObject, $value)
+    /**
+     * @param $serializedObject
+     * @param array $serializedData
+     * @return mixed
+     */
+    public function serialize($serializedObject, array $serializedData)
     {
-        $this->setValue($restoredObject, $value);
+        return $this->strategy->injectResult($this->getValue($serializedObject), $serializedData);
+    }
+
+    /**
+     * @param $restoredObject
+     * @param array $serializedData
+     */
+    public function restore($restoredObject, array $serializedData)
+    {
+        $this->setValue($restoredObject, $this->strategy->selectRequiredData($serializedData));
     }
 }

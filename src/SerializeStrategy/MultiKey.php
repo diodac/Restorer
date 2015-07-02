@@ -8,43 +8,36 @@
 
 namespace Diodac\Restorer\SerializeStrategy;
 
-
-use Diodac\Restorer\Property\Property;
-
 class MultiKey implements Strategy
 {
     private $keys;
-    private $definition;
 
     /**
      * @param array $keys
-     * @param Property $definition
      */
-    function __construct(array $keys, Property $definition)
+    function __construct(array $keys)
     {
         $this->keys = $keys;
-        $this->definition = $definition;
     }
 
     /**
-     * @param $obj
      * @param array $result
+     * @param array $serializedData
      * @return array
+     * @internal param $obj
      */
-    public function giveStorable($obj, array $result)
+    public function injectResult($result, array $serializedData)
     {
-        /** @var array $serialized */
-        $serialized = $this->definition->serialize($obj);
         foreach($this->keys as $key => $propName) {
-            $result[$key] = $serialized[$propName];
+            $serializedData[$key] = $result[$propName];
         }
-        return $result;
+        return $serializedData;
     }
 
-    public function restore($obj, array $data)
+    public function selectRequiredData(array $serializedData)
     {
-        $this->definition->restore($obj, array_map(function($key) use ($data) {
-            return $data[$key];
-        }, array_flip($this->keys)));
+        return array_map(function($key) use ($serializedData) {
+            return $serializedData[$key];
+        }, array_flip($this->keys));
     }
 }

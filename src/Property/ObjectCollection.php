@@ -16,53 +16,53 @@ class ObjectCollection extends Accessible
 {
     private $creators;
     private $typeKey;
+    private $strategy;
 
     /**
      * @param $name
      * @param ObjectRestorer[] $creators
+     * @param Strategy $strategy
      * @param string $typeKey
      */
-    function __construct($name, array $creators, $typeKey = '__type')
+    function __construct($name, array $creators, Strategy $strategy, $typeKey = '__type')
     {
         $this->creators = $creators;
         $this->typeKey = $typeKey;
-
+        $this->strategy = $strategy;
         parent::__construct($name);
     }
 
-    //FIXME: stare podejście
-    public function serialize($serializedObject)
+    public function serialize($serializedObject, array $serializedData)
     {
         $objects = $this->getValue($serializedObject);
         $classIndex = $this->getCreatorTypesIndexedByClass();
         $serialized = [];
 
-        foreach($objects as $index => $serializedObject) {
-            $objClass = get_class($serializedObject);
+        foreach($objects as $index => $obj) {
+            $objClass = get_class($obj);
             if (!isset($classIndex[$objClass])) {
                 throw new InvalidConfigurationException('Brak kreatora dla klasy ' . $objClass);
             }
             /** @var ObjectRestorer $creator */
             $creator = $this->creators[$classIndex[$objClass]];
-            $serialized[$index] = $this->serializeObjectAsArray($serializedObject, $creator->getProperties());
+            $serialized[$index] = $this->serializeObjectAsArray($obj, $creator->getProperties());
             $serialized[$index][$this->typeKey] = $classIndex[$objClass];
         }
 
-        return $serialized;
+        return $this->strategy->injectResult($serialized, $serializedData);
     }
 
-    private function serializeObjectAsArray($object, $properties)
+    private function serializeObjectAsArray($storing, $properties)
     {
-        $storing = $this->getValue($object);
-        return array_reduce($properties, function(array $carry, Strategy $property) use ($storing) {
-            return $property->giveStorable($storing, $carry);
+        return array_reduce($properties, function(array $carry, Property $property) use ($storing) {
+            return $property->serialize($storing, $carry);
         }, []);
     }
 
-    public function restore($restoredObject, $value)
+    public function restore($restoredObject, array $serializedData)
     {
         $restored = [];
-        foreach($value as $k => $v) {
+        foreach($this->strategy->selectRequiredData($serializedData) as $k => $v) {
             if (isset($v[$this->typeKey])) {
                 $restored[$k] = $this->restoreObject($v);
             } else {
