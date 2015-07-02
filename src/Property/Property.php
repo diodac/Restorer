@@ -15,6 +15,6 @@ interface Property
      * @return string
      */
     public function getName();
-    public function serialize($object);
-    public function restore($object, $value);
+    public function serialize($serializedObject);
+    public function restore($restoredObject, $value);
 }

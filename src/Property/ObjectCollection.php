@@ -10,6 +10,7 @@ namespace Diodac\Restorer\Property;
 
 use Diodac\Restorer\InvalidConfigurationException;
 use Diodac\Restorer\ObjectRestorer;
+use Diodac\Restorer\SerializeStrategy\Strategy;
 
 class ObjectCollection extends Accessible
 {
@@ -30,20 +31,20 @@ class ObjectCollection extends Accessible
     }
 
     //FIXME: stare podejście
-    public function serialize($object)
+    public function serialize($serializedObject)
     {
-        $objects = $this->getValue($object);
+        $objects = $this->getValue($serializedObject);
         $classIndex = $this->getCreatorTypesIndexedByClass();
         $serialized = [];
 
-        foreach($objects as $index => $object) {
-            $objClass = get_class($object);
+        foreach($objects as $index => $serializedObject) {
+            $objClass = get_class($serializedObject);
             if (!isset($classIndex[$objClass])) {
                 throw new InvalidConfigurationException('Brak kreatora dla klasy ' . $objClass);
             }
             /** @var ObjectRestorer $creator */
             $creator = $this->creators[$classIndex[$objClass]];
-            $serialized[$index] = $this->serializeObjectAsArray($object, $creator->getProperties());
+            $serialized[$index] = $this->serializeObjectAsArray($serializedObject, $creator->getProperties());
             $serialized[$index][$this->typeKey] = $classIndex[$objClass];
         }
 
@@ -52,12 +53,13 @@ class ObjectCollection extends Accessible
 
     private function serializeObjectAsArray($object, $properties)
     {
-        return array_map(function(Property $property) use ($object) {
-            return $property->store($object);
-        }, $properties);
+        $storing = $this->getValue($object);
+        return array_reduce($properties, function(array $carry, Strategy $property) use ($storing) {
+            return $property->giveStorable($storing, $carry);
+        }, []);
     }
 
-    public function restore($object, $value)
+    public function restore($restoredObject, $value)
     {
         $restored = [];
         foreach($value as $k => $v) {
@@ -67,7 +69,7 @@ class ObjectCollection extends Accessible
                 $restored[$k] = $v;
             }
         }
-        $this->setValue($object, $restored);
+        $this->setValue($restoredObject, $restored);
     }
 
     /**

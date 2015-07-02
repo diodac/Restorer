@@ -10,6 +10,7 @@ namespace Diodac\Restorer\Property;
 
 
 use Diodac\Restorer\ObjectRestorer;
+use Diodac\Restorer\SerializeStrategy\Strategy;
 
 class Object extends Accessible implements Property
 {
@@ -25,15 +26,16 @@ class Object extends Accessible implements Property
     }
 
     //FIXME: stare podejście
-    public function serialize($object)
+    public function serialize($serializedObject)
     {
-        return array_map(function(Property $property) use ($object) {
-            return $property->serialize($object);
-        }, $this->properties);
+        $storing = $this->getValue($serializedObject);
+        return array_reduce($this->properties, function(array $carry, Strategy $property) use ($storing) {
+            return $property->giveStorable($storing, $carry);
+        }, []);
     }
 
-    public function restore($object, $value)
+    public function restore($restoredObject, $value)
     {
-        $this->setValue($object, (new ObjectRestorer($this->class, $this->properties))->create($value));
+        $this->setValue($restoredObject, (new ObjectRestorer($this->class, $this->properties))->create($value));
     }
 }

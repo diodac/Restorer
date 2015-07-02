@@ -23,7 +23,7 @@ class ValueObjectCollection extends Accessible
         parent::__construct($name);
     }
 
-    public function restore($object, $value)
+    public function restore($restoredObject, $value)
     {
         $restored = [];
         foreach($value as $k => $v) {
@@ -33,7 +33,7 @@ class ValueObjectCollection extends Accessible
                 $restored[$k] = $v;
             }
         }
-        $this->setValue($object, $restored);
+        $this->setValue($restoredObject, $restored);
     }
 
     private function restoreObject($data)
@@ -46,9 +46,9 @@ class ValueObjectCollection extends Accessible
         return $this->strategies[$type][1]->construct($data);
     }
 
-    public function serialize($object)
+    public function serialize($serializedObject)
     {
-        $objects = $this->getValue($object);
+        $objects = $this->getValue($serializedObject);
         $classIndex = $this->getStrategyTypesIndexedByClass();
         $serialized = [];
 

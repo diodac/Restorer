@@ -11,13 +11,13 @@ namespace Diodac\Restorer\Property;
 
 class Value extends Accessible implements Property
 {
-    public function serialize($object)
+    public function serialize($serializedObject)
     {
-        return $this->getValue($object);
+        return $this->getValue($serializedObject);
     }
 
-    public function restore($object, $value)
+    public function restore($restoredObject, $value)
     {
-        $this->setValue($object, $value);
+        $this->setValue($restoredObject, $value);
     }
 }

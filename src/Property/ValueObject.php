@@ -21,13 +21,13 @@ class ValueObject extends Accessible
         parent::__construct($name);
     }
 
-    public function restore($object, $value)
+    public function restore($restoredObject, $value)
     {
-        $this->setValue($object, $this->constructor->construct($value));
+        $this->setValue($restoredObject, $this->constructor->construct($value));
     }
 
-    public function serialize($object)
+    public function serialize($serializedObject)
     {
-        return $this->serializator->serialize($this->getValue($object));
+        return $this->serializator->serialize($this->getValue($serializedObject));
     }
 }
