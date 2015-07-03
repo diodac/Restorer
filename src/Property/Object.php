@@ -38,7 +38,7 @@ class Object extends Accessible implements Property
 
     public function restore($restoredObject, array $serializedData)
     {
-        $this->setValue($restoredObject, (new ObjectRestorer($this->class, $this->properties))->create($serializedData));
+        $this->setValue($restoredObject, (new ObjectRestorer($this->class, $this->properties))->restore($serializedData));
     }
 
     /**

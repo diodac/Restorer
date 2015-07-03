@@ -43,7 +43,7 @@ class ObjectRestorer
         return $this->properties;
     }
 
-    public function create(array $data)
+    public function restore(array $data)
     {
         $obj = (new \ReflectionClass($this->class))->newInstanceWithoutConstructor();
 
