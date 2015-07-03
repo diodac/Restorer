@@ -2,6 +2,7 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Diodac\Restorer\ObjectRestorer;
+use Diodac\Restorer\Property\IdentityProperty;
 use Diodac\Restorer\Property\Object;
 use Diodac\Restorer\Property\ObjectCollection;
 use Diodac\Restorer\Property\ValueObjectCollection;
@@ -190,7 +191,7 @@ class InCollectionCategorySerializator implements \Diodac\Restorer\Property\Valu
 }
 
 $restorer = new ObjectRestorer('Entity', [
-    new Value('id', new SingleKey('id')),
+    new IdentityProperty(new Value('id', new SingleKey('id'))),
     new Value('name', new SingleKey('name')),
     new ValueObject('cost', new MoneyConstructor(), new MoneySerializator(), new MultiKey(['cost_amount' => 'amount', 'cost_currency' => 'currency'])),
     new ValueObjectCollection('categories', new CategoryConstructor(), new InCollectionCategorySerializator(), new SingleKey('categories')),
